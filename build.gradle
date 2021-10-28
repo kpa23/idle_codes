@@ -1,10 +1,11 @@
 plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.0'
     id 'java'
+    id("maven-publish")
 }
 
-group 'org.example'
-version '1.0-SNAPSHOT'
+group 'kpa23.idle_codes'
+version '1.0'
 
 repositories {
     mavenCentral()
@@ -32,7 +33,28 @@ jar {
 }
 // Output to build/libs/shadow.jar
 shadowJar {
-    archiveBaseName.set('IdleCodes')
+    archiveBaseName.set('idle_codes')
     archiveClassifier.set('')
     archiveVersion.set('')
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/kpa23/idle_codes")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+
+    publications {
+        shadow(MavenPublication) { publication ->
+            project.shadow.component(publication)
+            artifactId = 'idlecodes'
+            groupId 'kpa23'
+        }
+    }
 }
