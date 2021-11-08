@@ -1,6 +1,7 @@
 package com.idlecodes;
 
-import org.jsoup.*;
+
+import org.jsoup.Jsoup;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -15,7 +16,9 @@ import java.util.Scanner;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
+
 public class IdleCodes {
+
     public static class Code implements Serializable {
         public String str; // Code
         public LocalDateTime date; // Date added
@@ -86,11 +89,15 @@ public class IdleCodes {
         }
     }
 
-    public static void main(String[] args) throws IOException {
+
+    public static void main(String[] args) throws IOException, AWTException {
         String url = "https://idle-champions.fandom.com/wikia.php?controller=Fandom%5CArticleComments%5CApi%5CArticleCommentsController&method=getComments&namespace=0&title=Combinations";
-
-
-        String data = Jsoup.connect(url).ignoreContentType(true).execute().body();
+        String page;
+        if (args.length == 0)
+            page = "1";
+        else
+            page = args[0];
+        String data = Jsoup.connect(url).ignoreContentType(true).execute().body() + Jsoup.connect(url + "&page=" + page).ignoreContentType(true).execute().body();
         Codes c = new Codes();
         // try load codes from file
         c.load();
@@ -102,7 +109,6 @@ public class IdleCodes {
         }
         System.out.println("-------------------------------");
 
-
         String[] matches = Pattern.compile("(?<=\\\")([\\w!@#$%^&*.]{4}-?){2,3}([\\w!@#$%^&*.]{4})(?=\\\\)")
                 .matcher(data)
                 .results()
@@ -111,19 +117,29 @@ public class IdleCodes {
 
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         Clipboard clipboard = toolkit.getSystemClipboard();
-        Scanner s = new Scanner(System.in);
+        new Scanner(System.in);
+        // TODO Wait until game is running
         boolean found = false;
         for (String code_s : matches) {
             if (c.add(code_s)) {
                 if (!found) {
                     System.out.println("New codes:");
-                    System.out.println("Code is copied to clipboard, press Enter after you use it in the game");
+                    System.out.println("Code is copied to clipboard");
                     found = true;
                 }
                 System.out.print(code_s);
                 StringSelection strSel = new StringSelection(code_s + "\n");
                 clipboard.setContents(strSel, null);
-                s.nextLine();
+                CodeBot cb = new CodeBot();
+                if (cb.findButton()) {
+                    if (cb.enterCode())
+                        System.out.println(" (ok)");
+
+                    else System.out.println(" (bad code)");
+                } else {
+                    System.in.read();
+                    return;
+                }
             }
         }
         if (!found) {
@@ -131,7 +147,8 @@ public class IdleCodes {
         }
         // Save to file
         c.save();
-
+        System.out.println("All codes are saved");
         System.in.read();
+
     }
 }
