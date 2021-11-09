@@ -37,8 +37,8 @@ public class CodeBot {
             while ((read = in.read(buffer)) != -1) {
                 fos.write(buffer, 0, read);
             }
-            System.load(temp.getAbsolutePath());
         }
+        System.load(temp.getAbsolutePath());
     }
 
     public void openMenu() {
@@ -94,7 +94,7 @@ public class CodeBot {
             robot.keyPress(KeyEvent.VK_SPACE);
             robot.delay(50);
             robot.keyRelease(KeyEvent.VK_SPACE);
-            robot.delay(700);
+            robot.delay(1300);
             return true;
         }
     }
