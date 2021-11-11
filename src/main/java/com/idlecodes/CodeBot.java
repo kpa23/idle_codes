@@ -16,7 +16,6 @@ import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
-
 import static com.sun.jna.win32.W32APIOptions.DEFAULT_OPTIONS;
 import static org.bytedeco.opencv.global.opencv_imgproc.CV_TM_SQDIFF_NORMED;
 
@@ -90,6 +89,10 @@ public class CodeBot {
             robot.keyPress(KeyEvent.VK_SPACE);
             robot.delay(50);
             robot.keyRelease(KeyEvent.VK_SPACE);
+            robot.delay(150);
+            robot.keyPress(KeyEvent.VK_SPACE);
+            robot.delay(50);
+            robot.keyRelease(KeyEvent.VK_SPACE);
             robot.delay(1000);
             robot.keyPress(KeyEvent.VK_SPACE);
             robot.delay(50);
@@ -121,7 +124,10 @@ public class CodeBot {
         user32.ShowWindow(hWnd, User32.SW_SHOW);
         user32.SetForegroundWindow(hWnd);
         int[] rect = new int[]{0, 0, 0, 0};
-        int result = User32.instance.GetWindowRect(hWnd, rect);
+        if (User32.instance.GetWindowRect(hWnd, rect) == 0) {
+            System.out.println("Can't find Idle Champions window. Make sure the game is running and try again later");
+            throw new java.lang.RuntimeException("No Idle Champions window found");
+        }
         wx = rect[0];
         wy = rect[1];
         wh = rect[3] - rect[1];
