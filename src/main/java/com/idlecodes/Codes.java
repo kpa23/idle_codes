@@ -36,7 +36,7 @@ public class Codes implements Serializable {
         try (FileOutputStream fos = new FileOutputStream(this.filename);
              ObjectOutputStream oos = new ObjectOutputStream(fos)) {
             // Delete all codes that are older than 60 days
-            list.removeIf(b -> ChronoUnit.DAYS.between(LocalDateTime.now(), b.date) > 30);
+            list.removeIf(b -> ChronoUnit.DAYS.between(LocalDateTime.now(), b.date) > 60);
             oos.writeObject(this.list);
         } catch (Exception e) {
             e.printStackTrace();
@@ -54,15 +54,15 @@ public class Codes implements Serializable {
         }
     }
 
-
-
     public static class Code implements Serializable {
         public String str; // Code
         public LocalDateTime date; // Date added
 
         // Constructor
         public Code(String str) {
-            this.str = str;
+            this.str = str.replace("-", "").toUpperCase()
+                    .replaceFirst("([\\w!@#$%^&*.]{4})([\\w!@#$%^&*.]{4})([\\w!@#$%^&*.]{4})([\\w!@#$%^&*.]{4})?", "$1-$2-$3-$4")
+                    .replaceFirst("(-)$", "");
             this.date = LocalDateTime.now();
         }
 
