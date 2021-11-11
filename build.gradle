@@ -13,17 +13,12 @@ repositories {
 
 dependencies {
     implementation fileTree(dir: 'lib', include: ['*.jar'])
-    //implementation group: 'org.bytedeco', name: 'javacv-platform', version: '1.5.6'
-    // https://mvnrepository.com/artifact/commons-io/commons-io
     implementation 'commons-io:commons-io:2.5'
-
+    implementation 'net.java.dev.jna:jna:5.9.0'
 }
 
 test {
     useJUnitPlatform()
-}
-tasks.withType(JavaCompile) {
-    options.compilerArgs << '-Xlint:unchecked'
 }
 
 jar {
@@ -32,16 +27,13 @@ jar {
                 'Main-Class': 'com.idlecodes.IdleCodes'
         )
     }
-    enabled = false
-    dependsOn(shadowJar { classifier = null })
+
 }
 // Output to build/libs/shadow.jar
 shadowJar {
     archiveBaseName.set('idlecodes')
     archiveClassifier.set('')
     archiveVersion.set('')
-    minimize()
-    archiveName = 'idlecodes.jar'
 }
 
 publishing {
@@ -55,8 +47,7 @@ publishing {
             }
         }
     }
-    shadowJar.archiveClassifier.set('')
-    shadowJar.archiveVersion.set('')
+
     publications {
         shadow(MavenPublication) { publication ->
             project.shadow.component(publication)
