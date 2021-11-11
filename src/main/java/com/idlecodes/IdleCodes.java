@@ -68,7 +68,6 @@ public class IdleCodes {
         c.load();
 
         c.printLastN(20);
-
         String[] matches = Pattern.compile("(?<=\\\")([\\w!@#$%^&*.]{4}-?){2,3}([\\w!@#$%^&*.]{4})(?=\\\\)")
                 .matcher(data)
                 .results()
