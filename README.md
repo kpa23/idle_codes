@@ -16,7 +16,7 @@ and go > **java -jar idlecodes.jar**
 
 ![image](https://user-images.githubusercontent.com/1526383/141287974-7b355d66-f26f-4396-bcc3-f825e3dae517.png)
 
-First run creates **codes.db **for saved codes and **settings.cfg** - for settings.
+First run creates **codes.db** for saved codes and **settings.cfg** - for settings.
 The programm automatically copy\paste codes into the game. If you want to copy them manualy, you may change the config value in the file **settings.cfg**
 
 HOW TO USE
