@@ -69,12 +69,12 @@ public class Codes implements Serializable {
         // Compare objects to find out if we already saved one
         @Override
         public boolean equals(Object object) {
-            if (object != null && object instanceof Code thing) {
-                thing = (Code) object;
+            if (object != null && object instanceof Code) {
+                Object thing = (Code) object;
                 if (str == null) {
-                    return (thing.str == null);
+                    return (((Code) thing).str == null);
                 } else {
-                    return str.equals(thing.str);
+                    return str.equals(((Code) thing).str);
                 }
             }
             return false;
