@@ -13,16 +13,16 @@ import java.util.Properties;
 
 public class IdleCodes {
     private static int mode;
+    private static boolean debug;
 
     public static void saveProperties() {
         try (OutputStream out = new FileOutputStream(".\\settings.cfg")) {
             Properties props = new Properties();
             props.setProperty("mode_auto", String.valueOf(mode));
-            props.store(out, """
-                    User properties.
-                    Mode:
-                      1 for manual copy\\paste mode
-                      2 for automatic mode""");
+            props.store(out, "User properties.\n" +
+                    "Mode:\n" +
+                    "  1 for manual copy\\paste mode\n" +
+                    "  2 for automatic mode\n");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -33,16 +33,17 @@ public class IdleCodes {
             Properties props = new Properties();
             // load a properties file
             props.load(input);
-            // get the property value and print it out
+            // get the property value
             mode = Integer.parseInt(props.getProperty("mode_auto"));
+            debug = Boolean.parseBoolean(props.getProperty("debug"));
         } catch (IOException ex) {
             mode = 2;
             saveProperties();
         }
     }
 
-    public static boolean autoCode() throws AWTException, IOException {
-        CodeBot cb = new CodeBot();
+    public static boolean autoCode() throws AWTException, IOException, OCRException.OCRError, OCRException.GameNotFound {
+        CodeBot cb = new CodeBot(debug);
         if (cb.findButton()) {
             if (cb.enterCode())
                 System.out.println(" (ok)");
@@ -54,7 +55,7 @@ public class IdleCodes {
         return true;
     }
 
-    public static void main(String[] args) throws IOException, AWTException {
+    public static void main(String[] args) throws IOException, AWTException, OCRException.OCRError, OCRException.GameNotFound {
         loadProperties();
         String url = "https://idle-champions.fandom.com/wikia.php?controller=Fandom%5CArticleComments%5CApi%5CArticleCommentsController&method=getComments&namespace=0&title=Combinations";
         String page;
