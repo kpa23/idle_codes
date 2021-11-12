@@ -4,6 +4,7 @@ Install
 Download compiled jar from packages or compile it by yourself from sources
  - Put the jar file wherever you want.
  - Make sure you have Java installed ( https://www.oracle.com/java/technologies/downloads/#jdk17-windows )
+ - Need JDK(at least version 53.0 (java1.9))
  - Associate jar files in windows:
 > How to run jar files on windows:
 > https://stackoverflow.com/questions/394616/running-jar-file-on-windows
