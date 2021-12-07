@@ -2,11 +2,15 @@ package com.idlecodes;
 
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.*;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.Properties;
@@ -57,30 +61,44 @@ public class IdleCodes {
 
     public static void main(String[] args) throws IOException, AWTException, OCRException.OCRError, OCRException.GameNotFound {
         loadProperties();
-        String url = "https://idle-champions.fandom.com/wikia.php?controller=Fandom%5CArticleComments%5CApi%5CArticleCommentsController&method=getComments&namespace=0&title=Combinations";
+        String url0 = "https://idle-champions.fandom.com/wikia.php?controller=Fandom%5CArticleComments%5CApi%5CArticleCommentsController&method=getComments&namespace=0&title=Combinations";
+        String url1 = "https://incendar.com/idlechampions_codes.php";
         String page;
         if (args.length == 0)
             page = "1";
         else
             page = args[0];
-        String data = Jsoup.connect(url).ignoreContentType(true).execute().body() + Jsoup.connect(url + "&page=" + page).ignoreContentType(true).execute().body();
-        Codes c = new Codes();
-        // try load codes from file
-        c.load();
+        String data0 = Jsoup.connect(url0).ignoreContentType(true).execute().body() + Jsoup.connect(url0 + "&page=" + page).ignoreContentType(true).execute().body();
 
-        c.printLastN(20);
-        String[] matches = Pattern.compile("(?<=\\\")([\\w!@#$%^&*.]{4}-?){2,3}([\\w!@#$%^&*.]{4})(?=\\\\)")
-                .matcher(data)
+        Document doc;
+        Elements cds;
+        doc = Jsoup.parse(Jsoup.connect(url1).ignoreContentType(true).execute().body());
+        cds = doc.select("textarea"); // a with href
+        String data1 = cds.text();
+        Codes c = new Codes();
+
+        String[] matches0 = Pattern.compile("(?<=\\\")([\\w!@#$%^&*.]{4}-?){2,3}([\\w!@#$%^&*.]{4})(?=\\\\)")
+                .matcher(data0)
                 .results()
                 .map(MatchResult::group)
                 .toArray(String[]::new);
+        String[] matches = Pattern.compile("([\\w!@#$%^&*.]{4}-?){2,3}([\\w!@#$%^&*.]{4})")
+                .matcher(data1)
+                .results()
+                .map(MatchResult::group)
+                .toArray(String[]::new);
+        HashSet<String> set = new HashSet<>();
+
+        set.addAll(Arrays.asList(matches0));
+        set.addAll(Arrays.asList(matches));
 
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         Clipboard clipboard = toolkit.getSystemClipboard();
-
-
+        // try load codes from file
+        c.load();
+        c.printLastN(20);
         boolean found = false;
-        for (String code_s : matches) {
+        for (String code_s : set) {
             if (c.add(code_s)) {
                 if (!found) {
                     System.out.println("New codes:");

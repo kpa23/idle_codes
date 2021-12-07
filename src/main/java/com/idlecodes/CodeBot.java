@@ -58,7 +58,7 @@ public class CodeBot {
         robot.keyPress(KeyEvent.VK_O);
         robot.delay(60);
         robot.keyRelease(KeyEvent.VK_O);
-        robot.delay(900);
+        robot.delay(1800);
     }
 
     public boolean enterCode() throws AWTException, IOException, OCRException.OCRError {
@@ -92,6 +92,14 @@ public class CodeBot {
             robot.keyPress(KeyEvent.VK_SPACE);
             robot.delay(50);
             robot.keyRelease(KeyEvent.VK_SPACE);
+            robot.delay(500);
+            robot.keyPress(KeyEvent.VK_SPACE);
+            robot.delay(50);
+            robot.keyRelease(KeyEvent.VK_SPACE);
+            robot.delay(200);
+            robot.keyPress(KeyEvent.VK_SPACE);
+            robot.delay(50);
+            robot.keyRelease(KeyEvent.VK_SPACE);
             robot.delay(150);
             robot.keyPress(KeyEvent.VK_SPACE);
             robot.delay(50);
@@ -106,12 +114,12 @@ public class CodeBot {
         robot.delay(500);
         robot.keyPress(KeyEvent.VK_ENTER);
         robot.delay(50);
-        robot.keyRelease(KeyEvent.VK_ENTER);
         robot.delay(100);
         robot.keyPress(KeyEvent.VK_ENTER);
         robot.delay(50);
         robot.keyRelease(KeyEvent.VK_ENTER);
         robot.delay(900);
+        robot.keyRelease(KeyEvent.VK_ENTER);
         robot.keyPress(KeyEvent.VK_ESCAPE);
         robot.delay(50);
         robot.keyRelease(KeyEvent.VK_ESCAPE);
