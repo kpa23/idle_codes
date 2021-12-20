@@ -13,11 +13,11 @@ class CodeBotTest {
     @org.junit.jupiter.api.Test
     void detectCorrespondingZoneOK1() throws IOException, AWTException, OCRException.OCRError, OCRException.ImageNotFound {
         IdleCodes.loadJarDll("/opencv_java454.dll");
-        BufferedImage screen0 = ImageIO.read(new File(".//test//findok0.png"));
-        BufferedImage screen1 = ImageIO.read(new File(".//test//findok1.png"));
-        BufferedImage screenu0 = ImageIO.read(new File(".//test//findunlock0.png"));
-        BufferedImage screenu2 = ImageIO.read(new File(".//test//findunlock2.png"));
-        BufferedImage screenu1 = ImageIO.read(new File(".//test//findunlock1.png"));
+        BufferedImage screen0 = ImageIO.read(this.getClass().getResourceAsStream("/test//findok0.png"));
+        BufferedImage screen1 = ImageIO.read(this.getClass().getResourceAsStream("/test//findok1.png"));
+        BufferedImage screenu0 = ImageIO.read(this.getClass().getResourceAsStream("/test//findunlock0.png"));
+        BufferedImage screenu2 = ImageIO.read(this.getClass().getResourceAsStream("/test//findunlock2.png"));
+        BufferedImage screenu1 = ImageIO.read(this.getClass().getResourceAsStream("/test//findunlock1.png"));
         BufferedImage okButton = ImageIO.read(this.getClass().getResourceAsStream("/ok.png"));
         BufferedImage unlockButton = ImageIO.read(this.getClass().getResourceAsStream("/unlock.png"));
         CodeBot cb = new CodeBot(false);
