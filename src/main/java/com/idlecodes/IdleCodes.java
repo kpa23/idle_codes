@@ -59,8 +59,21 @@ public class IdleCodes {
         return true;
     }
 
+    public static void loadJarDll(String name) throws IOException {
+        byte[] buffer = new byte[1024];
+        int read = -1;
+        File temp = File.createTempFile(name, "");
+        try (FileOutputStream fos = new FileOutputStream(temp); InputStream in = CodeBot.class.getResourceAsStream(name)) {
+            while ((read = in.read(buffer)) != -1) {
+                fos.write(buffer, 0, read);
+            }
+        }
+        System.load(temp.getAbsolutePath());
+    }
+
     public static void main(String[] args) throws IOException, AWTException, OCRException.OCRError, OCRException.GameNotFound {
         loadProperties();
+        loadJarDll("/opencv_java454.dll");
         String url0 = "https://idle-champions.fandom.com/wikia.php?controller=Fandom%5CArticleComments%5CApi%5CArticleCommentsController&method=getComments&namespace=0&title=Combinations";
         String url1 = "https://incendar.com/idlechampions_codes.php";
         String page;
@@ -111,6 +124,7 @@ public class IdleCodes {
                 if (mode == 2) {
                     if (!autoCode())
                         return;
+
                 } else {
                     System.in.read();
                 }

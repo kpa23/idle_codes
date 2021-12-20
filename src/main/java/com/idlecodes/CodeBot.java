@@ -27,12 +27,13 @@ import java.text.MessageFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static com.sun.jna.win32.W32APIOptions.DEFAULT_OPTIONS;
 
 public class CodeBot {
-    private int x;
-    private int y;
+    public int x;
+    public int y;
 
 
     private boolean debug = false;
@@ -40,18 +41,6 @@ public class CodeBot {
     private Robot robot;
     // assumes the current class is called MyLogger
     private final static Logger logger = Logger.getLogger(CodeBot.class.getName());
-
-    public void loadJarDll(String name) throws IOException {
-        byte[] buffer = new byte[1024];
-        int read = -1;
-        File temp = File.createTempFile(name, "");
-        try (FileOutputStream fos = new FileOutputStream(temp); InputStream in = this.getClass().getResourceAsStream(name)) {
-            while ((read = in.read(buffer)) != -1) {
-                fos.write(buffer, 0, read);
-            }
-        }
-        System.load(temp.getAbsolutePath());
-    }
 
     public void openMenu() {
         robot.delay(100);
@@ -63,6 +52,16 @@ public class CodeBot {
 
     public boolean enterCode() throws AWTException, IOException, OCRException.OCRError {
         robot.mouseMove(x, y);
+        if (debug)
+            System.out.println("x=" + x + ";y=" + y);
+        robot.delay(200);
+        robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+        robot.delay(40);
+        robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+        robot.delay(200);
+        robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+        robot.delay(40);
+        robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
         robot.delay(200);
         robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
         robot.delay(40);
@@ -76,15 +75,19 @@ public class CodeBot {
         robot.keyRelease(KeyEvent.VK_CONTROL);
         robot.delay(50);
         robot.keyRelease(KeyEvent.VK_V);
-        robot.delay(500);
+        robot.delay(700);
         robot.keyPress(KeyEvent.VK_ENTER);
-        robot.delay(50);
+        robot.delay(60);
         robot.keyRelease(KeyEvent.VK_ENTER);
-        robot.delay(1600);
+        robot.delay(150);
+        robot.keyPress(KeyEvent.VK_ENTER);
+        robot.delay(60);
+        robot.keyRelease(KeyEvent.VK_ENTER);
+        robot.delay(1700);
         try {
-            detectCorrespondingZone("ok", false);
+            findButton("ok", false);
         } catch (OCRException.ImageNotFound e) {
-            robot.delay(2000);
+            robot.delay(1500);
             robot.keyPress(KeyEvent.VK_SPACE);
             robot.delay(50);
             robot.keyRelease(KeyEvent.VK_SPACE);
@@ -111,19 +114,20 @@ public class CodeBot {
             robot.delay(1700);
             return true;
         }
-        robot.delay(500);
+
+        robot.delay(200);
         robot.keyPress(KeyEvent.VK_ENTER);
-        robot.delay(50);
         robot.delay(100);
+        robot.keyRelease(KeyEvent.VK_ENTER);
+        robot.delay(200);
         robot.keyPress(KeyEvent.VK_ENTER);
-        robot.delay(50);
+        robot.delay(100);
         robot.keyRelease(KeyEvent.VK_ENTER);
-        robot.delay(900);
-        robot.keyRelease(KeyEvent.VK_ENTER);
+        robot.delay(700);
         robot.keyPress(KeyEvent.VK_ESCAPE);
         robot.delay(50);
         robot.keyRelease(KeyEvent.VK_ESCAPE);
-        robot.delay(700);
+        robot.delay(600);
         return false;
     }
 
@@ -143,8 +147,7 @@ public class CodeBot {
         int SW_SHOW = 1;
     }
 
-    public CodeBot(boolean debug) throws AWTException, OCRException.GameNotFound {
-        this.debug = debug;
+    public void checkGame() throws OCRException.GameNotFound {
         User32 user32 = User32.instance;
         WinDef.HWND hWnd = user32.FindWindow(null, "Idle Champions");
         user32.ShowWindow(hWnd, User32.SW_SHOW);
@@ -158,6 +161,10 @@ public class CodeBot {
         wy = rect[1];
         wh = rect[3] - rect[1];
         ww = rect[2] - rect[0];
+    }
+
+    public CodeBot(boolean debug) throws AWTException {
+        this.debug = debug;
         this.robot = new Robot();
     }
 
@@ -176,18 +183,35 @@ public class CodeBot {
         }
     }
 
-    public void detectCorrespondingZone(String buttonName) throws AWTException, IOException, OCRException.ImageNotFound, OCRException.OCRError {
-        detectCorrespondingZone(buttonName, false);
+    public void findButton(String buttonName, boolean savePos) throws AWTException, IOException, OCRException.ImageNotFound, OCRException.OCRError {
+        Rectangle scr;
+        if (buttonName == "ok") {
+            scr = new Rectangle(this.wx + ww / 3, this.wy + wh / 3, this.ww / 3, this.wh / 3);
+        } else {
+            scr = new Rectangle(this.wx, (int) (this.wy + wh / 1.5), this.ww / 8, this.wh / 3);
+        }
+        BufferedImage imageScreen = new Robot().createScreenCapture(scr);
+//        if (debug) {
+//            ImageIO.write(imageScreen,"png",new File(".//test//find"+buttonName+".png"));
+//            System.in.read();
+//        }
+        BufferedImage imageButton = ImageIO.read(this.getClass().getResourceAsStream("/" + buttonName + ".png"));
+        detectCorrespondingZone(buttonName, imageButton, imageScreen, savePos);
     }
 
-    public void detectCorrespondingZone(String buttonName, boolean savePos) throws AWTException, IOException, OCRException.ImageNotFound, OCRException.OCRError {
-        Rectangle scr = new Rectangle(this.wx, this.wy + wh / 2, this.ww / 2 + this.ww / 4, this.wh / 2);
+    public void detectCorrespondingZone(String buttonName, BufferedImage buttonImg, BufferedImage screenImg, boolean savePos) throws IOException, OCRException.ImageNotFound, OCRException.OCRError {
+
+        ORB surf;
+        if (buttonName == "ok") {
+            surf = ORB.create(9500, (float) 1.12, 30, 35, 2, 3, ORB.HARRIS_SCORE, 45, 45);
+        } else {
+            surf = ORB.create(6000, (float) 1.11, 35, 40, 3, 3, ORB.HARRIS_SCORE, 50, 45);
+        }
+
         robot.mouseMove(1, 1);
-        Mat objectImageMat = bufferedImage2Mat(ImageIO.read(this.getClass().getResourceAsStream("/" + buttonName + ".png")));
-        BufferedImage image = new Robot().createScreenCapture(scr);
-        Mat sceneImageMat = bufferedImage2Mat(image);
-        // 8000, (float) 1.089,50, 16, 3, 3, ORB.HARRIS_SCORE, 11, 16
-        ORB surf = ORB.create(2000, (float) 1.1, 20, 50, 3, 3, ORB.HARRIS_SCORE, 50, 50);
+        Mat objectImageMat = bufferedImage2Mat(buttonImg);
+        Mat sceneImageMat = bufferedImage2Mat(screenImg);
+
         MatOfKeyPoint objectKeyPoints = new MatOfKeyPoint();
         MatOfKeyPoint sceneKeyPoints = new MatOfKeyPoint();
         Mat objectDescriptor = new Mat();
@@ -224,8 +248,13 @@ public class CodeBot {
         }
         LinkedList<DMatch> goodMatches = new LinkedList<>();
         MatOfDMatch gm = new MatOfDMatch();
+        List<Float> sortedList = matches.toList().stream().map(a -> a.distance).sorted().collect(Collectors.toList());
+        double dis = 25;
+        if (sortedList.size() > 4 && (sortedList.get(4) < 30 || maxDist / minDist < 1.5))
+            dis = sortedList.get(4);
+
         for (int i = 0; i < objectDescriptor.rows(); i++) {
-            if (matches.toList().get(i).distance < 30) { //16
+            if (matches.toList().get(i).distance <= dis) { //16
                 goodMatches.addLast(matches.toList().get(i));
             }
         }
@@ -256,14 +285,15 @@ public class CodeBot {
 
         // Calib3d.RANSAC could be used instead of 0
         try {
-            Mat hg = Calib3d.findHomography(obj, scene, 0, 5);
+            Mat hg = Calib3d.findHomography(obj, scene, 0, 3);
 
             Mat objectCorners = new Mat(4, 1, CvType.CV_32FC2);
             Mat sceneCorners = new Mat(4, 1, CvType.CV_32FC2);
             objectCorners.put(0, 0, new double[]{0, 0});
             objectCorners.put(1, 0, new double[]{objectImageMat.cols(), 0});
-            objectCorners.put(2, 0, new double[]{objectImageMat.cols(), objectImageMat.rows()});
-            objectCorners.put(3, 0, new double[]{0, objectImageMat.rows()});
+            objectCorners.put(2, 0, new double[]{0, objectImageMat.rows()});
+            objectCorners.put(3, 0, new double[]{objectImageMat.cols(), objectImageMat.rows()});
+
 
             Core.perspectiveTransform(objectCorners, sceneCorners, hg);
 
@@ -290,8 +320,8 @@ public class CodeBot {
             }
 
             if (savePos) {
-                this.x = (int) ((p1.x + p2.x + p3.x + p4.x) / 4 - 40) + this.wx;
-                this.y = (int) ((p1.y + p2.y + p3.y + p4.y) / 4 - 40 + this.wh / 2 + this.wy);
+                this.x = (int) ((p1.x + p2.x + p3.x + p4.x) / 4) + this.wx;
+                this.y = (int) ((p1.y + p2.y + p3.y + p4.y) / 4 + this.wh * 2 / 3 + this.wy - 40);
                 if (debug)
                     logger.info("x=" + x + "; y=" + y);
             }
@@ -308,49 +338,55 @@ public class CodeBot {
                     Imgproc.line(imgMatch, p3, p4, new Scalar(0, 255, 0), 1);
                     Imgproc.line(imgMatch, p4, p1, new Scalar(0, 255, 0), 1);
 
-                    imshow(imgMatch);
                 } catch (Exception e) {
                     logger.severe(e.toString());
                 }
             }
+            if (debug)
+                imshow(imgMatch, buttonName);
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             throw new OCRException.ImageNotFound("Image not found");
         }
     }
 
-    public void imshow(Mat src) {
+    public void imshow(Mat src, String buttonName) {
         BufferedImage bufImage = null;
         try {
             MatOfByte matOfByte = new MatOfByte();
-            Imgcodecs.imencode(".jpg", src, matOfByte);
+            Imgcodecs.imencode(".png", src, matOfByte);
             byte[] byteArray = matOfByte.toArray();
             InputStream in = new ByteArrayInputStream(byteArray);
             bufImage = ImageIO.read(in);
-
-            JFrame frame = new JFrame("Image");
-            frame.getContentPane().setLayout(new FlowLayout());
-            frame.getContentPane().add(new JLabel(new ImageIcon(bufImage)));
-            frame.pack();
-            frame.setVisible(true);
-            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+            ImageIO.write(bufImage, "png", new File(".//" + buttonName + ".png"));
+//            JFrame frame = new JFrame("Image");
+//            frame.getContentPane().setLayout(new FlowLayout());
+//            frame.getContentPane().add(new JLabel(new ImageIcon(bufImage)));
+//            frame.pack();
+//            frame.setVisible(true);
+//            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public boolean findButton() throws AWTException, IOException, OCRException.OCRError {
-        loadJarDll("/opencv_java454.dll");
+    public boolean findButton() throws AWTException, IOException, OCRException.OCRError, OCRException.GameNotFound {
         String buttonName = "unlock";
+        checkGame();
         try {
-            detectCorrespondingZone(buttonName, true);
+            findButton(buttonName, true);
         } catch (OCRException.ImageNotFound e) {
             openMenu();
-            try {
-                detectCorrespondingZone(buttonName, true);
-            } catch (OCRException.ImageNotFound ex) {
-                System.out.println("Can't find \"Unlock a Locked Chest\" button. Make sure the game is opened.");
-                ex.printStackTrace();
-                return false;
+            for (int retries = 0; retries < 5; retries++) {
+                try {
+                    findButton(buttonName, true);
+                } catch (OCRException.ImageNotFound ex) {
+                    if (retries > 5) {
+                        System.out.println("Can't find \"Unlock a Locked Chest\" button. Make sure the game is opened.");
+                        ex.printStackTrace();
+                        return false;
+                    }
+                }
             }
         }
         return true;

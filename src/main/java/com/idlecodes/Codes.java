@@ -13,7 +13,7 @@ public class Codes implements Serializable {
     private List<Code> list;
 
     public void printLastN(int n) {
-        System.out.println("------Last 20 codes saved------");
+        System.out.println("------Last " + n + " codes saved------");
         int j = this.list.size() - Math.min(this.list.size(), n);
         for (int i = j; i < this.list.size(); i++) {
             System.out.println(this.list.get(i).str + " : " + this.list.get(i).date.format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")));
